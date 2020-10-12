@@ -28,6 +28,8 @@ const CODEBLOCK_ATTR_NAME = 'data-te-codeblock';
  * @ignore
  */
 class WwCodeBlockManager {
+  static _replacers = {};
+
   constructor(wwe) {
     this.wwe = wwe;
     this.eventManager = wwe.eventManager;
@@ -103,6 +105,26 @@ class WwCodeBlockManager {
   }
 
   /**
+   * Set replacer for code block
+   * @param {string} language - code block language
+   * @param {function} replacer - replacer function to code block element
+   */
+  static setReplacer(language, replacer) {
+    language = language.toLowerCase();
+
+    WwCodeBlockManager._replacers[language] = replacer;
+  }
+
+  /**
+   * get replacer for code block
+   * @param {string} language - code block type
+   * @returns {function} - replacer function
+   */
+  getReplacer(language) {
+    return WwCodeBlockManager._replacers[language];
+  }
+
+  /**
    * Prepare nodes for pasting to code block
    * @param {Array.<Node>} nodes Node array
    * @returns {DocumentFragment}
@@ -112,6 +134,7 @@ class WwCodeBlockManager {
       .getEditor()
       .getDocument()
       .createDocumentFragment();
+
     let text = this.convertNodesToText(nodes);
 
     text = text.replace(/\n$/, '');
@@ -192,6 +215,7 @@ class WwCodeBlockManager {
       const codeTag = pre.querySelector('code');
       let lang, numberOfBackticks;
 
+      lang = pre.getAttribute('data-language');
       if (codeTag) {
         lang = codeTag.getAttribute('data-language');
         numberOfBackticks = codeTag.getAttribute('data-backticks');
@@ -218,7 +242,14 @@ class WwCodeBlockManager {
       const resultText = pre.textContent.replace(/\s+$/, '');
 
       domUtils.empty(pre);
-      pre.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
+
+      const replacer = this.getReplacer(lang);
+
+      if (replacer) {
+        pre.appendChild(replacer(resultText, lang, codeTag));
+      } else {
+        pre.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
+      }
 
       if (lang) {
         pre.setAttribute('data-language', lang);
@@ -228,6 +259,23 @@ class WwCodeBlockManager {
         pre.setAttribute('data-backticks', numberOfBackticks);
       }
       pre.setAttribute(CODEBLOCK_ATTR_NAME, '');
+    });
+  }
+
+  refreshWysiwygCodeBlock(node) {
+    if (!node) {
+      node = this.wwe.getBody();
+    }
+
+    domUtils.findAll(node, 'pre').forEach(pre => {
+      let lang = pre.getAttribute('data-language');
+
+      const replacer = this.getReplacer(lang);
+
+      if (replacer) {
+        pre.innerHTML = '';
+        pre.appendChild(replacer(resultText, lang, codeTag));
+      }
     });
   }
 

@@ -4,8 +4,6 @@
  */
 import css from 'tui-code-snippet/domUtil/css';
 import addClass from 'tui-code-snippet/domUtil/addClass';
-import on from 'tui-code-snippet/domEvent/on';
-import off from 'tui-code-snippet/domEvent/off';
 
 import BlockOverlay from './blockOverlay';
 import domUtils from '../utils/dom';
@@ -42,21 +40,17 @@ class CodeBlockGadget extends BlockOverlay {
 
     this._languageLabel = domUtils.createElementWith('<span>text</span>');
     domUtils.append(this.el, this._languageLabel);
+    this._languageLabel.addEventListener('dblclick', () => {
+      const v0 = this.getAttachedElement().getAttribute('data-language');
+      const v1 = window.prompt('Language', v0);
 
-    this._buttonOpenModalEditor = domUtils.createElementWith(
-      `<button type="button">Editor</button>`
-    );
-    domUtils.append(this.el, this._buttonOpenModalEditor);
-
-    this._eventManager.emit('removeEditor', () => {
-      off(this._buttonOpenModalEditor, 'click');
-      this._buttonOpenModalEditor = null;
+      this.getAttachedElement().setAttribute('data-language', v1);
+      this._updateLanguage();
+      this._wysiwygEditor.componentManager.getManager('codeblock').refreshWysiwygCodeBlock();
     });
   }
 
-  _initDOMEvent() {
-    on(this._buttonOpenModalEditor, 'click', () => this._openPopupCodeBlockEditor());
-  }
+  _initDOMEvent() {}
 
   _openPopupCodeBlockEditor() {
     this._eventManager.emit('openPopupCodeBlockEditor', this.getAttachedElement());
