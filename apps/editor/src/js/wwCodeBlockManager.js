@@ -262,23 +262,6 @@ class WwCodeBlockManager {
     });
   }
 
-  refreshWysiwygCodeBlock(node) {
-    if (!node) {
-      node = this.wwe.getBody();
-    }
-
-    domUtils.findAll(node, 'pre').forEach(pre => {
-      const lang = pre.getAttribute('data-language');
-
-      const replacer = this.getReplacer(lang);
-
-      if (replacer) {
-        pre.innerHTML = '';
-        pre.appendChild(replacer('FIXME', lang, pre)); // FIXME
-      }
-    });
-  }
-
   /**
    * Remove codeblock of first line when press backspace in first line
    * @param {Event} ev Event object
