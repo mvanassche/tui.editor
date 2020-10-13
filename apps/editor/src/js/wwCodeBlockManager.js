@@ -28,8 +28,6 @@ const CODEBLOCK_ATTR_NAME = 'data-te-codeblock';
  * @ignore
  */
 class WwCodeBlockManager {
-  static _replacers = {};
-
   static _customCodeBlockTagName = null;
 
   constructor(wwe) {
@@ -108,26 +106,6 @@ class WwCodeBlockManager {
 
   static setCustomCodeBlockTagName(customCodeBlockTagName) {
     WwCodeBlockManager._customCodeBlockTagName = customCodeBlockTagName;
-  }
-
-  /**
-   * Set replacer for code block
-   * @param {string} language - code block language
-   * @param {function} replacer - replacer function to code block element
-   */
-  static setReplacer(language, replacer) {
-    language = language.toLowerCase();
-
-    WwCodeBlockManager._replacers[language] = replacer;
-  }
-
-  /**
-   * get replacer for code block
-   * @param {string} language - code block type
-   * @returns {function} - replacer function
-   */
-  getReplacer(language) {
-    return WwCodeBlockManager._replacers[language];
   }
 
   /**
@@ -258,25 +236,21 @@ class WwCodeBlockManager {
       let tagName = 'code';
 
       if (custom) {
-        tagName = custom(lang);
+        const customTag = custom(lang);
+
+        if (customTag) {
+          tagName = customTag;
+        }
       }
 
-      const replacer = this.getReplacer(lang);
+      const newCode = document.createElement(tagName);
 
-      if (replacer) {
-        domUtils.empty(pre);
-        pre.appendChild(replacer(resultText, lang, codeTag));
-      } else {
-        const newCode = document.createElement(tagName);
-
-        domUtils.empty(pre);
-        Array.from(codeTag.attributes).forEach(attr => {
-          newCode.setAttribute(attr.nodeName, attr.nodeValue);
-        });
-        newCode.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
-        pre.appendChild(newCode);
-      }
-
+      domUtils.empty(pre);
+      Array.from(codeTag.attributes).forEach(attr => {
+        newCode.setAttribute(attr.nodeName, attr.nodeValue);
+      });
+      newCode.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
+      pre.appendChild(newCode);
       if (lang) {
         pre.setAttribute('data-language', lang);
         addClass(pre, `lang-${lang}`);
