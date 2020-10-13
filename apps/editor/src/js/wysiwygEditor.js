@@ -844,8 +844,8 @@ class WysiwygEditor {
 
     let html = this.editor.getHTML();
 
-    html = html.replaceAll('<code-chunk-editor>', '');
-    html = html.replaceAll('</code-chunk-editor>', '');
+    html = html.replace(/<code[^>]*>/g, '');
+    html = html.replace(/<\/code[^>]*>/g, '');
     // empty line replace to br
     html = html.replace(FIND_EMPTY_LINE, (match, tag) => {
       let result;

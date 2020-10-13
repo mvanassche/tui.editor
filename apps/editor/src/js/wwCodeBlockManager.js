@@ -30,6 +30,8 @@ const CODEBLOCK_ATTR_NAME = 'data-te-codeblock';
 class WwCodeBlockManager {
   static _replacers = {};
 
+  static _customCodeBlockTagName = null;
+
   constructor(wwe) {
     this.wwe = wwe;
     this.eventManager = wwe.eventManager;
@@ -102,6 +104,10 @@ class WwCodeBlockManager {
     this.eventManager.listen('wysiwygProcessHTMLText.codeblock', html =>
       this._changePreToPreCode(html)
     );
+  }
+
+  static setCustomCodeBlockTagName(customCodeBlockTagName) {
+    WwCodeBlockManager._customCodeBlockTagName = customCodeBlockTagName;
   }
 
   /**
@@ -207,15 +213,20 @@ class WwCodeBlockManager {
    * @param {HTMLElement} node root node to find pre
    */
   modifyCodeBlockForWysiwyg(node) {
+    let pres;
+
     if (!node) {
-      node = this.wwe.getBody();
+      pres = domUtils.findAll(this.wwe.getBody(), 'pre');
+    } else if (node.tagName.toLowerCase() === 'pre') {
+      pres = [node];
+    } else {
+      pres = domUtils.findAll(node, 'pre');
     }
 
-    domUtils.findAll(node, 'pre').forEach(pre => {
-      const codeTag = pre.querySelector('code');
+    pres.forEach(pre => {
+      const codeTag = pre.querySelector('*');
       let lang, numberOfBackticks;
 
-      lang = pre.getAttribute('data-language');
       if (codeTag) {
         lang = codeTag.getAttribute('data-language');
         numberOfBackticks = codeTag.getAttribute('data-backticks');
@@ -241,14 +252,29 @@ class WwCodeBlockManager {
 
       const resultText = pre.textContent.replace(/\s+$/, '');
 
-      domUtils.empty(pre);
+      domUtils.empty(codeTag);
+
+      const custom = WwCodeBlockManager._customCodeBlockTagName;
+      let tagName = 'code';
+
+      if (custom) {
+        tagName = custom(lang);
+      }
 
       const replacer = this.getReplacer(lang);
 
       if (replacer) {
+        domUtils.empty(pre);
         pre.appendChild(replacer(resultText, lang, codeTag));
       } else {
-        pre.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
+        const newCode = document.createElement(tagName);
+
+        domUtils.empty(pre);
+        Array.from(codeTag.attributes).forEach(attr => {
+          newCode.setAttribute(attr.nodeName, attr.nodeValue);
+        });
+        newCode.innerHTML = resultText ? sanitizeHtmlCode(resultText) : brString;
+        pre.appendChild(newCode);
       }
 
       if (lang) {
@@ -268,13 +294,13 @@ class WwCodeBlockManager {
     }
 
     domUtils.findAll(node, 'pre').forEach(pre => {
-      let lang = pre.getAttribute('data-language');
+      const lang = pre.getAttribute('data-language');
 
       const replacer = this.getReplacer(lang);
 
       if (replacer) {
         pre.innerHTML = '';
-        pre.appendChild(replacer(resultText, lang, codeTag));
+        pre.appendChild(replacer('FIXME', lang, pre)); // FIXME
       }
     });
   }

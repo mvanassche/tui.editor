@@ -41,12 +41,17 @@ class CodeBlockGadget extends BlockOverlay {
     this._languageLabel = domUtils.createElementWith('<span>text</span>');
     domUtils.append(this.el, this._languageLabel);
     this._languageLabel.addEventListener('dblclick', () => {
-      const v0 = this.getAttachedElement().getAttribute('data-language');
+      const cbManager = this._wysiwygEditor.componentManager.getManager('codeblock');
+      const pre = this.getAttachedElement();
+      const v0 = pre.getAttribute('data-language');
       const v1 = window.prompt('Language', v0);
 
-      this.getAttachedElement().setAttribute('data-language', v1);
-      this._updateLanguage();
-      this._wysiwygEditor.componentManager.getManager('codeblock').refreshWysiwygCodeBlock();
+      if (v1) {
+        pre.setAttribute('data-language', v1);
+        pre.querySelector('*').setAttribute('data-language', v1);
+        this._updateLanguage();
+        cbManager.modifyCodeBlockForWysiwyg(pre);
+      }
     });
   }
 
