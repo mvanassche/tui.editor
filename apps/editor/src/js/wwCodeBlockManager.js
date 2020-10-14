@@ -240,6 +240,7 @@ class WwCodeBlockManager {
 
         if (customTag) {
           tagName = customTag;
+          pre.classList.add(customTag);
         }
       }
 
