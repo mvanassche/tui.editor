@@ -1,6 +1,6 @@
 {
-  "name": "@toast-ui/editor",
-  "version": "2.4.0",
+  "name": "@logic-tools-toast-ui/editor",
+  "version": "2.5.0",
   "description": "GFM  Markdown Wysiwyg Editor - Productive and Extensible",
   "keywords": [
     "nhn",
@@ -101,6 +101,7 @@
   },
   "dependencies": {
     "@types/codemirror": "0.0.71",
-    "codemirror": "^5.48.4"
+    "codemirror": "^5.48.4",
+    "vsts-npm-auth": "^0.41.0"
   }
 }
